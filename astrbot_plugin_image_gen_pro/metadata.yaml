@@ -1,0 +1,7 @@
+name: astrbot_plugin_image_gen_pro
+display_name: 图像生成Pro
+desc: 增强版图像生成插件，支持模板变量、自定义API路径等扩展功能
+version: v1.1.6-mod
+author: jialuo
+repo: ""
+astrbot_version: ">=4.10.4"
