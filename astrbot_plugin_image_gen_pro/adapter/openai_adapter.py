@@ -16,13 +16,6 @@ from ..core.types import GenerationRequest, ImageCapability
 class OpenAIAdapter(BaseImageAdapter):
     """OpenAI 图像生成适配器 (DALL-E / GPT Image Models)。"""
 
-    def _image_to_data_uri(self, image: Any) -> str:
-        """将参考图转换为 data URI 形式。"""
-        mime_type = (getattr(image, "mime_type", None) or "image/png").lower()
-        data = getattr(image, "data", b"")
-        b64_data = base64.b64encode(data).decode("ascii")
-        return f"data:{mime_type};base64,{b64_data}"
-
     def get_capabilities(self) -> ImageCapability:
         """获取适配器支持的功能。"""
         return self._get_configured_capabilities()
@@ -61,13 +54,7 @@ class OpenAIAdapter(BaseImageAdapter):
         else:
             api_base_url = None
 
-        if request.images and api_base_url and api_base_url.endswith("/images/generations"):
-            url = api_base_url
-            headers["Content-Type"] = "application/json"
-            payload = self._build_payload(request)
-            payload["images"] = [self._image_to_data_uri(img) for img in request.images]
-            kwargs = {"json": payload}
-        elif use_edit:
+        if use_edit:
             url = api_base_url if api_base_url else f"{base}/v1/images/edits"
             form = aiohttp.FormData()
             form.add_field("model", self.model or "gpt-image-1")
@@ -79,7 +66,7 @@ class OpenAIAdapter(BaseImageAdapter):
                 form.add_field("size", size)
             for img in request.images:
                 form.add_field(
-                    "image",
+                    "image[]",
                     img.data,
                     content_type=img.mime_type,
                     filename="image",
