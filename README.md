@@ -26,9 +26,16 @@
 | :-- | :-- |
 | `/生图 <提示词、预设名称或人设名称> [额外提示词]` | 生成图片。 |
 | `/生图模型` | 查看可用模型和当前模型。 |
-| `/生图模型 <序号>` | 切换模型。 |
-| `/预设` | 查看所有预设和人设。 |
-| `/预设 添加 <预设名:预设内容>` | 添加预设。 |
+## 变更说明（适配器兼容性更新）
+
+- **影响文件**: [adapter/openai_adapter.py](adapter/openai_adapter.py)
+- **要点**:
+	- **multipart 字段名**: 将上传参考图的 multipart 字段由 `image[]` 改为 `image`（重复的 `image` 字段），以兼容 OpenAI 官方客户端和多数代理。
+	- **文件名**: 为 multipart 文件补充合理的文件名（如 image.png / image.jpg / image.webp），提高代理/上游解析兼容性。
+	- **MaiziAI(v2) 兼容**: 当配置的 base URL 明确指向 `/images/generations`（例如 MaiziAI v2）且请求包含参考图时，改为在 JSON body 中通过 `images` 字段传递 data URI（data:{mime};base64,...），而不是走 `/images/edits` 的 multipart 路径。
+	- **诊断改进**: 在遇到 502 且上游返回 `upstream_error` 时，增加日志提示，帮助排查代理不支持 edits 路径或模型不匹配的问题。
+- **理由**: 避免在一些 OpenAI 兼容网关（如 api.xstx.info / MaiziAI）上因端点或请求格式差异导致的 500/502 错误，提升参考图（图生图/编辑）功能的稳定性。
+- **后续建议**: 如果使用第三方网关，建议直接配置完整的 images/generations 或 images/edits URL（根据厂商文档），以避免自动路由判断带来的兼容性风险。
 | `/预设 删除 <预设名>` | 删除预设。 |
 
 ## 原作者内容简化版
